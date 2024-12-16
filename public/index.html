@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Annotation App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    #image-input{
+      background-color: #b6ada9;
+      color:white;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      margin-top: 20px;
+    }
+
+    #upload-btn {
+      background-color: rgb(28, 157, 8);
+      color:white;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      margin-top: 20px;
+      border-radius: 20px;
+    }
+    #image-container {
+      position: relative;
+      display: inline-block;
+    }
+    #uploaded-image {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      margin: 15px auto;
+    }
+    .popup {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      border-radius: 4px;
+      cursor: move;
+      width: auto;
+      white-space: no-wrap;
+      box-sizing: border-box;
+    }
+    #download-btn {
+      background-color: rgb(37, 153, 255);
+      color:white;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      margin-top: 20px;
+      border-radius: 20px;
+    }
+     #add-popup-btn {
+      background-color: rgb(255, 225, 77);
+      color:white;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Annotation App</h1>
+  <form id="upload-form">
+    <input type="file" id="image-input" accept="image/*" required />
+    <button type="submit" id="upload-btn">Upload Image</button>
+  </form>
+
+  <div id="image-container" style="display: none;">
+    <img id="uploaded-image" src="" alt="Uploaded Image" />
+  </div>
+  <button id="add-popup-btn" style="display: none;">Add Popup</button>
+  <button id="download-btn" style="display: none;">Download File</button>
+
+  <script>
+
+
+  //  Upload form 
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const imageInput = document.getElementById('image-input');
+  if (!imageInput.files.length) return;
+
+  const formData = new FormData();
+  formData.append('image', imageInput.files[0]);
+
+  const response = await fetch('/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await response.json();
+  const imageUrl = data.imageUrl;
+
+  const uploadedImage = document.getElementById('uploaded-image');
+  uploadedImage.src = imageUrl;
+
+  document.getElementById('image-container').style.display = 'block';
+  document.getElementById('add-popup-btn').style.display = 'inline-block';
+  document.getElementById('download-btn').style.display = 'inline-block';
+});
+
+
+// Add a POPUP button
+
+document.getElementById('add-popup-btn').addEventListener('click', () => {
+  const container = document.getElementById('image-container');
+  const popup = document.createElement('div');
+  popup.className = 'popup';
+  popup.contentEditable = true;
+  popup.innerText = 'New Popup';
+  popup.style.left = '50px';
+  popup.style.top = '50px';
+
+  let isDragging = false; 
+  let isFinalized = false; 
+
+  // Enable dragging
+  popup.onmousedown = (e) => {
+    if (isFinalized) return; 
+    isDragging = true;
+
+    const shiftX = e.clientX - popup.getBoundingClientRect().left;
+    const shiftY = e.clientY - popup.getBoundingClientRect().top;
+
+    const moveAt = (pageX, pageY) => {
+      popup.style.left = pageX - shiftX + 'px';
+      popup.style.top = pageY - shiftY + 'px';
+    };
+
+    const onMouseMove = (event) => {
+      if (isDragging) {
+        moveAt(event.pageX, event.pageY);
+      }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+
+    const stopDragging = () => {
+      isDragging = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', stopDragging);
+    };
+
+    document.addEventListener('mouseup', stopDragging);
+  };
+
+  popup.ondragstart = () => false; 
+
+ 
+  popup.addEventListener('dblclick', () => {
+    isFinalized = true; 
+    popup.contentEditable = false;
+    popup.style.cursor = 'default'; 
+  });
+
+  
+  container.appendChild(popup);
+});
+
+
+
+// For modified Image Downloading
+
+
+
+// For modified html File Downloading
+
+
+document.getElementById('download-btn').addEventListener('click', () => {
+  const image = document.getElementById('uploaded-image');
+  const imageSrc = image.src;
+
+  const popups = document.querySelectorAll('.popup');
+  const popupHTML = Array.from(popups).map(popup => {
+    const style = `
+      position: absolute;
+      left: ${popup.style.left};
+      top: ${popup.style.top};
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      white-space: nowrap;
+    `;
+    return `<div class="popup" style="${style}">${popup.innerText}</div>`;
+  }).join('\n');
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annotated Image</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+      position: relative;
+    }
+    #image-container {
+      position: relative;
+      display: inline-block;
+    }
+    #uploaded-image {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      margin: 15px auto;
+    }
+    .popup {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-sizing: border-box;
+      display: none; /* Popups are hidden by default */
+    }
+    #uploaded-image:hover + .popup {
+      display: block; /* Show the popup when hovering over the image */
+    }
+  </style>
+</head>
+<body>
+  <h1>Annotated Image</h1>
+  <div id="image-container">
+    <img id="uploaded-image" src="${imageSrc}" alt="Annotated Image" />
+    ${popupHTML}
+  </div>
+</body>
+</html>
+  `;
+
+  //To Create a the HTML content
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const link = document.createElement('a');
+  link.download = 'annotated-image.html';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+
+
+  URL.revokeObjectURL(link.href);
+});
+
+
+  </script>
+</body>
+</html>
