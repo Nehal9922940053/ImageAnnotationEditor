@@ -186,6 +186,10 @@
     currentDraggedPopup = null;
   }
 
+  //without popup icon code
+
+/*
+
   document.getElementById('download-btn').addEventListener('click', () => {
     const image = document.getElementById('uploaded-image');
     const popups = document.querySelectorAll('.popup');
@@ -241,7 +245,106 @@
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
-  });
+  });*/
+
+
+
+
+
+
+
+
+
+
+
+
+// POPUP Icon code
+
+
+document.getElementById('download-btn').addEventListener('click', () => {
+  const image = document.getElementById('uploaded-image');
+  const popups = document.querySelectorAll('.popup');
+
+  const popupHTML = Array.from(popups)
+    .map(
+      (p) => `
+      <div class="popup-container" style="position: absolute; left: ${p.style.left}; top: ${p.style.top}; transform: translate(-50%, -50%);">
+        <i class="fa-solid fa-message popup-icon" style="font-size: 20px; cursor: pointer;"></i>
+        <div class="popup-content">${p.innerText}</div>
+      </div>`
+    )
+    .join('');
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+          text-align: center;
+          position: relative;
+        }
+        #image-container {
+          position: relative;
+          display: inline-block;
+        }
+        #uploaded-image {
+          max-width: 100%;
+          border: 1px solid #ccc;
+        }
+        .popup-container {
+          position: absolute;
+          display: inline-block;
+          text-align: center;
+        }
+        .popup-icon {
+          color: #f0ad4e;
+        }
+        .popup-content {
+          display: none;
+          position: absolute;
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 5px;
+          border-radius: 4px;
+          white-space: nowrap;
+          top: 25px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        .popup-container:hover .popup-content {
+          display: block;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="image-container">
+        <img src="${image.src}" alt="Annotated Image" id="uploaded-image" />
+        ${popupHTML}
+      </div>
+    </body>
+    </html>`;
+
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const link = document.createElement('a');
+  link.download = 'annotated-image.html';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+});
+
+
+
+
+
+
+
+
+
+
   </script>
 </body>
-</html>
+</html> 
